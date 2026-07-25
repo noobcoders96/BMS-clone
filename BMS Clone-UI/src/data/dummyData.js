@@ -82,7 +82,7 @@ export function generateSeatLayout() {
 
 export const DUMMY_USER = {
   userId: "usr_9001",
-  name: "Karthik",
+  name: "super-man",
   email: "karthik@example.com",
 };
 
