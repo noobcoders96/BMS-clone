@@ -1,5 +1,5 @@
 // Toggle between dummy data and real backend
-export const USE_DUMMY_DATA = false;
+export const USE_DUMMY_DATA = true;
 
 // API Gateway URL
 export const GATEWAY_BASE_URL = import.meta.env.VITE_GATEWAY_BASE;

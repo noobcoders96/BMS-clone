@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchMovieById } from "../api/movieApi";
+import { fetchShowsByMovie } from "../api/showApi";
+import { USE_DUMMY_DATA } from "../api/config";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 export default function MovieDetail() {
   const { movieId } = useParams();
@@ -11,19 +15,44 @@ export default function MovieDetail() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
+    const loadMovie = async () => {
+      try {
+        setLoading(true);
 
-    fetchMovieById(movieId)
-      .then((movieData) => {
+        const movieData = await fetchMovieById(movieId);
         setMovie(movieData);
-        setShows([]);
-      })
-      .catch((error) => console.error(error))
-      .finally(() => setLoading(false));
+
+        if (USE_DUMMY_DATA) {
+          const showData = await fetchShowsByMovie(movieId);
+          setShows(showData);
+        } else {
+          // Show Service not implemented yet
+          setShows([]);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMovie();
   }, [movieId]);
 
-  if (loading || !movie) {
-    return <div className="container empty-state">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="container">
+        <div className="detail-hero">
+          <Skeleton width={240} height={360} />
+
+          <div style={{ flex: 1 }}>
+            <Skeleton height={40} width={300} />
+            <Skeleton height={25} width={180} style={{ marginTop: 16 }} />
+            <Skeleton count={4} style={{ marginTop: 20 }} />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
