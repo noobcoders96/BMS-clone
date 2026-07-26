@@ -1,34 +1,38 @@
-import { ENDPOINTS, USE_DUMMY_DATA, authHeaders } from "./config";
+import axios from "axios";
+import { ENDPOINTS, USE_DUMMY_DATA } from "./config";
 import { DUMMY_MOVIES } from "../data/dummyData";
 
-// Simulates network latency so loading states actually get exercised in the UI.
-const fakeDelay = (ms = 400) => new Promise((res) => setTimeout(res, ms));
+const fakeDelay = (ms = 400) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function fetchMovies() {
-  if (USE_DUMMY_DATA) {
-    await fakeDelay();
-    return DUMMY_MOVIES;
+// Get all movies
+export const fetchMovies = async () => {
+  try {
+    if (USE_DUMMY_DATA) {
+      await fakeDelay();
+      return DUMMY_MOVIES;
+    }
+
+    const { data } = await axios.get(ENDPOINTS.MOVIES);
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch movies:", error);
+    throw error;
   }
+};
 
-  // ============================================================
-  // 🔌 PLUG IN HERE — GET /api/movies  (Catalog Service)
-  // Response: MovieListResponse[] — see Excel "Endpoints" sheet
-  // ============================================================
-  const res = await fetch(ENDPOINTS.MOVIES, { headers: authHeaders() });
-  if (!res.ok) throw new Error(`Failed to fetch movies: ${res.status}`);
-  return res.json();
-}
+// Get movie by ID
+export const fetchMovieById = async (movieId) => {
+  try {
+    if (USE_DUMMY_DATA) {
+      await fakeDelay();
+      return DUMMY_MOVIES.find((movie) => movie.movieId === movieId);
+    }
 
-export async function fetchMovieById(movieId) {
-  if (USE_DUMMY_DATA) {
-    await fakeDelay();
-    return DUMMY_MOVIES.find((m) => m.movieId === movieId);
+    const { data } = await axios.get(ENDPOINTS.MOVIE_DETAIL(movieId));
+    return data;
+  } catch (error) {
+    console.error(`Failed to fetch movie ${movieId}:`, error);
+    throw error;
   }
-
-  // ============================================================
-  // 🔌 PLUG IN HERE — GET /api/movies/{movieId}  (Catalog Service)
-  // ============================================================
-  const res = await fetch(ENDPOINTS.MOVIE_DETAIL(movieId), { headers: authHeaders() });
-  if (!res.ok) throw new Error(`Failed to fetch movie ${movieId}: ${res.status}`);
-  return res.json();
-}
+};
