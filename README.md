@@ -273,8 +273,7 @@ http://localhost:8083/swagger-ui.html
 
 Developed by:
 
-- **Kevin Harris D**
-- **Karthikeyan S**
+- **Karthikeyan S** **&** **Kevin Harris D**
 
 This project was built as a collaborative learning initiative to explore microservices architecture using Spring Boot, Spring Cloud, React, PostgreSQL, and modern distributed system design principles.
 **Kevin Harris D**
