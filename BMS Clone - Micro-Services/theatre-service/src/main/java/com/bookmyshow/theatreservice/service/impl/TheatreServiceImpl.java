@@ -6,11 +6,13 @@ import com.bookmyshow.theatreservice.entity.Show;
 import com.bookmyshow.theatreservice.repository.ShowRepository;
 import com.bookmyshow.theatreservice.service.TheatreService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class TheatreServiceImpl implements TheatreService {
 
@@ -23,19 +25,9 @@ public class TheatreServiceImpl implements TheatreService {
         // Validate movie exists in Catalog Service
         catalogClient.getMovieById(movieId);
 
-        List<Show> allShows = showRepository.findAllNative();
-
-        System.out.println("Total Shows = " + allShows.size());
-
-        for (Show show : allShows) {
-            System.out.println(show.getMovieId());
-        }
-
+        log.info("Fetching shows for movieId: {}", movieId);
         List<Show> shows = showRepository.findByMovieId(movieId);
-
-        System.out.println("Movie ID = " + movieId);
-        System.out.println("Shows found = " + shows.size());
-
+        log.info("Found {} shows for movieId {}", shows.size(), movieId);
 
         return shows.stream()
                 .map(show -> ShowResponse.builder()
