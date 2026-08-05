@@ -29,6 +29,9 @@ public class Seat {
     @Column(nullable = false)
     private SeatStatus status;
 
+    @Version
+    private Long version;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "show_id", nullable = false)
     private Show show;
