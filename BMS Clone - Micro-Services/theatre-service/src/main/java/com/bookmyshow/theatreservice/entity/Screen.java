@@ -1,9 +1,8 @@
 package com.bookmyshow.theatreservice.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.util.List;
+import lombok.*;
 
 @Entity
 @Table(name = "screens")
@@ -13,20 +12,20 @@ import java.util.List;
 @Builder
 public class Screen {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String screenId;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String screenId;
 
-    @Column(nullable = false)
-    private String screenName;
+  @Column(nullable = false)
+  private String screenName;
 
-    @Column(nullable = false)
-    private Integer capacity;
+  @Column(nullable = false)
+  private Integer capacity;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "theatre_id", nullable = false)
-    private Theatre theatre;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "theatre_id", nullable = false)
+  private Theatre theatre;
 
-    @OneToMany(mappedBy = "screen", cascade = CascadeType.ALL)
-    private List<Show> shows;
+  @OneToMany(mappedBy = "screen", cascade = CascadeType.ALL)
+  private List<Show> shows;
 }

@@ -1,9 +1,8 @@
 package com.bookmyshow.theatreservice.dto;
 
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
@@ -11,13 +10,13 @@ import java.time.LocalDateTime;
 @Builder
 public class ShowResponse {
 
-    private String showId;
+  private String showId;
 
-    private String theatreName;
+  private String theatreName;
 
-    private String screenName;
+  private String screenName;
 
-    private LocalDateTime showTime;
+  private LocalDateTime showTime;
 
-    private BigDecimal price;
+  private BigDecimal price;
 }

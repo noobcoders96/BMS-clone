@@ -1,350 +1,393 @@
-# 🎭 Theatre Service
+# Theatre Service
 
-The Theatre Service manages theatres, screens, movie showtimes, seat layouts, and seat availability for the BookMyShow Clone Microservices Application.
-
----
-
-# 🏗️ Architecture
-
-```
-                 +------------------+
-                 |  Catalog Service |
-                 +------------------+
-                          ▲
-                          │ (Feign Client)
-                          │
-+------------+      +------------------+      +----------------+
-|  Frontend  | ---> | Theatre Service  | ---> | PostgreSQL DB  |
-+------------+      +------------------+      +----------------+
-```
+The Theatre Service is responsible for managing theatres, screens, shows, and seats in the BookMyShow Clone microservices application. It exposes APIs to retrieve available shows, fetch seat layouts, and temporarily lock seats during the booking process.
 
 ---
 
-# 📦 Database ER Diagram
+## Features
 
-```text
-                     THEATRES
-+------------------------------------------------+
-| theatre_id (PK)                                |
-| name                                           |
-| city                                           |
-| address                                        |
-+------------------------------------------------+
-                 |
-                 | 1
-                 |
-                 | *
-                 ▼
-                     SCREENS
-+------------------------------------------------+
-| screen_id (PK)                                 |
-| screen_name                                    |
-| capacity                                       |
-| theatre_id (FK) -------------------------------+
-+------------------------------------------------+
-                 |
-                 | 1
-                 |
-                 | *
-                 ▼
-                      SHOWS
-+------------------------------------------------+
-| show_id (PK)                                   |
-| movie_id                                       |
-| show_time                                      |
-| price                                          |
-| screen_id (FK) --------------------------------+
-+------------------------------------------------+
-                 |
-                 | 1
-                 |
-                 | *
-                 ▼
-                      SEATS
-+------------------------------------------------+
-| seat_id (PK)                                   |
-| seat_row                                       |
-| seat_number                                    |
-| tier                                           |
-| status                                         |
-| show_id (FK) ----------------------------------+
-+------------------------------------------------+
-```
+- Manage theatres, screens, shows, and seats
+- Retrieve all available shows for a movie
+- View seat layout for a show
+- Temporarily lock seats during booking (TTL)
+- Automatically release expired seat locks
+- Prevent concurrent seat booking using Optimistic Locking
+- Validate movie existence through Catalog Service
+- Global exception handling
+- Swagger API documentation
+- Service registration with Eureka
 
 ---
 
-# 🔗 Entity Relationship Mapping
+## Tech Stack
 
-## Theatre → Screen
-
-One theatre contains multiple screens.
-
-```java
-@OneToMany(mappedBy = "theatre")
-private List<Screen> screens;
-```
-
-```java
-@ManyToOne
-@JoinColumn(name = "theatre_id")
-private Theatre theatre;
-```
-
-Relationship
-
-```
-Theatre (1) --------> (*) Screen
-```
+- Java 21
+- Spring Boot
+- Spring Data JPA
+- Hibernate
+- PostgreSQL
+- OpenFeign
+- Eureka Client
+- Lombok
+- Spring Validation
+- Spring Scheduler
+- SpringDoc OpenAPI (Swagger)
 
 ---
 
-## Screen → Show
-
-One screen can have multiple movie shows.
-
-```java
-@OneToMany(mappedBy = "screen")
-private List<Show> shows;
-```
-
-```java
-@ManyToOne
-@JoinColumn(name = "screen_id")
-private Screen screen;
-```
-
-Relationship
+## Architecture
 
 ```
-Screen (1) --------> (*) Show
-```
-
----
-
-## Show → Seat
-
-One show contains multiple seats.
-
-```java
-@OneToMany(mappedBy = "show")
-private List<Seat> seats;
-```
-
-```java
-@ManyToOne
-@JoinColumn(name = "show_id")
-private Show show;
-```
-
-Relationship
-
-```
-Show (1) --------> (*) Seat
-```
-
----
-
-# 📚 Hibernate & JPA Concepts Used
-
-## @Entity
-
-Marks a Java class as a database table.
-
-```java
-@Entity
-```
-
----
-
-## @Table
-
-Maps the entity to a table.
-
-```java
-@Table(name = "shows")
-```
-
----
-
-## @Id
-
-Marks the Primary Key.
-
-```java
-@Id
-private String showId;
-```
-
----
-
-## @GeneratedValue
-
-Automatically generates IDs.
-
-```java
-@GeneratedValue(strategy = GenerationType.UUID)
-```
-
----
-
-## @Column
-
-Maps a field to a database column.
-
-```java
-@Column(nullable = false)
-private BigDecimal price;
-```
-
----
-
-## @ManyToOne
-
-Many child records belong to one parent.
-
-Examples
-
-- Many Screens → One Theatre
-- Many Shows → One Screen
-- Many Seats → One Show
-
----
-
-## @OneToMany
-
-One parent has multiple child records.
-
-Examples
-
-- Theatre → Screens
-- Screen → Shows
-- Show → Seats
-
----
-
-## @JoinColumn
-
-Specifies the Foreign Key column.
-
-```java
-@JoinColumn(name = "screen_id")
-```
-
----
-
-## FetchType.LAZY
-
-Loads related entities only when required.
-
-```java
-@ManyToOne(fetch = FetchType.LAZY)
-```
-
-Advantages
-
-- Better Performance
-- Reduced Memory Usage
-- Faster API Responses
-
----
-
-## CascadeType.ALL
-
-Automatically propagates persistence operations.
-
-```java
-@OneToMany(
-    mappedBy = "show",
-    cascade = CascadeType.ALL
-)
-```
-
-Operations cascaded
-
-- Persist
-- Merge
-- Remove
-- Refresh
-- Detach
-
----
-
-# 📊 Database Relationships
-
-| Parent | Child | Relationship |
-|---------|-------|--------------|
-| Theatre | Screen | One-to-Many |
-| Screen | Show | One-to-Many |
-| Show | Seat | One-to-Many |
-
----
-
-# 🌐 REST APIs
-
-## Get Shows By Movie
-
-```
-GET /api/shows?movieId={movieId}
-```
-
-Example
-
-```
-GET /api/shows?movieId=66666666-6666-6666-6666-666666666666
-```
-
-Response
-
-```json
-[
-  {
-    "showId": "33333333-3333-3333-3333-333333333331",
-    "theatreName": "PVR Phoenix Marketcity",
-    "screenName": "Screen 1",
-    "showTime": "2026-08-05T10:00:00",
-    "price": 250.00
-  }
-]
-```
-
----
-
-# 🔄 Inter-Service Communication
-
-The Theatre Service communicates synchronously with the Catalog Service using **Spring Cloud OpenFeign**.
-
-```
-Frontend
-     │
-     ▼
-API Gateway
-     │
-     ▼
+Client
+   │
+   ▼
+Theatre Controller
+   │
+   ▼
 Theatre Service
-     │
-     ▼
-Catalog Service
-     │
-     ▼
+   │
+   ├────────► Catalog Service (Feign)
+   │
+   ▼
+Repositories
+   │
+   ▼
 PostgreSQL
 ```
 
 ---
 
-# 🚀 Upcoming Features
+## Database Relationship
 
-- Retrieve Seat Layout
-- Seat Locking using Optimistic Locking
-- Booking Integration
-- Payment Integration
-- Redis-based Seat Lock TTL
-- Resilience4j Circuit Breaker
-- Distributed Tracing
-- Notification Service Integration
+```
+Theatre (1)
+     │
+     │ One-To-Many
+     ▼
+Screen (Many)
+     │
+     │ One-To-Many
+     ▼
+Show (Many)
+     │
+     │ One-To-Many
+     ▼
+Seat (Many)
+```
 
 ---
 
-# 👨‍💻 Contributors
+## Entity Relationship Diagram
 
-- **Karthikeyan S** – Design & Architecture
-- **Kevin Harris D** – Development & Implementation
+```
++--------------------+
+|      Theatre       |
++--------------------+
+| theatreId (PK)     |
+| name               |
+| city               |
+| address            |
++--------------------+
+          │
+          │ 1
+          │
+          ▼
++--------------------+
+|      Screen        |
++--------------------+
+| screenId (PK)      |
+| screenName         |
+| capacity           |
+| theatre_id (FK)    |
++--------------------+
+          │
+          │ 1
+          │
+          ▼
++--------------------+
+|       Show         |
++--------------------+
+| showId (PK)        |
+| movieId            |
+| showTime           |
+| price              |
+| screen_id (FK)     |
++--------------------+
+          │
+          │ 1
+          │
+          ▼
++-------------------------------+
+|             Seat              |
++-------------------------------+
+| seatId (PK)                   |
+| seatRow                       |
+| seatNumber                    |
+| tier                          |
+| status                        |
+| lockedBy                      |
+| lockedAt                      |
+| lockExpiresAt                 |
+| version (@Version)            |
+| show_id (FK)                  |
++-------------------------------+
+```
+
+---
+
+## Hibernate Mapping
+
+### Theatre → Screen
+
+```
+@OneToMany(mappedBy = "theatre")
+```
+
+```
+@ManyToOne
+@JoinColumn(name = "theatre_id")
+```
+
+---
+
+### Screen → Show
+
+```
+@OneToMany(mappedBy = "screen")
+```
+
+```
+@ManyToOne
+@JoinColumn(name = "screen_id")
+```
+
+---
+
+### Show → Seat
+
+```
+@OneToMany(mappedBy = "show")
+```
+
+```
+@ManyToOne
+@JoinColumn(name = "show_id")
+```
+
+---
+
+## Optimistic Locking
+
+The service uses Hibernate Optimistic Locking to prevent multiple users from updating the same seat simultaneously.
+
+```
+@Version
+private Long version;
+```
+
+If two users attempt to lock the same seat concurrently, Hibernate throws an `ObjectOptimisticLockingFailureException`, which is handled globally and returned as **409 Conflict**.
+
+---
+
+## Seat Locking Flow (TTL)
+
+```
+User selects seats
+        │
+        ▼
+Validate Show
+        │
+        ▼
+Validate Seats
+        │
+        ▼
+Already BOOKED?
+        │
+      Yes ─────► 409 Conflict
+        │
+      No
+        ▼
+Already LOCKED?
+        │
+      Yes
+        │
+        ▼
+Lock Expired?
+        │
+     Yes
+        │
+Release Lock
+        │
+        ▼
+AVAILABLE
+        │
+        ▼
+Lock Seat
+(status = LOCKED)
+
+lockedBy
+lockedAt
+lockExpiresAt (+5 min)
+
+        │
+        ▼
+Return Success
+```
+
+---
+
+## Scheduler
+
+A scheduled job periodically scans the database and releases expired seat locks.
+
+```
+@Scheduled(fixedRate = 60000)
+```
+
+Expired locks are reset to:
+
+- AVAILABLE
+- lockedBy = NULL
+- lockedAt = NULL
+- lockExpiresAt = NULL
+
+---
+
+## APIs
+
+### Get Shows by Movie
+
+```
+GET /api/shows?movieId={movieId}
+```
+
+Returns all available shows for a movie.
+
+---
+
+### Get Seat Layout
+
+```
+GET /api/shows/{showId}/seats
+```
+
+Returns the grouped seat layout with current availability.
+
+---
+
+### Lock Seats
+
+```
+POST /api/shows/{showId}/seats/lock
+```
+
+Request
+
+```json
+{
+  "seatIds": [
+    "seat-id-1",
+    "seat-id-2"
+  ],
+  "userId": "kevin"
+}
+```
+
+Response
+
+```json
+{
+  "locked": true,
+  "lockExpiresInSeconds": 300
+}
+```
+
+---
+
+## Exception Handling
+
+Handled globally using `@RestControllerAdvice`.
+
+| Exception | HTTP Status |
+|-----------|------------|
+| ResourceNotFoundException | 404 |
+| SeatAlreadyLockedException | 409 |
+| ObjectOptimisticLockingFailureException | 409 |
+| Validation Errors | 400 |
+| Generic Exception | 500 |
+
+---
+
+## Logging
+
+SLF4J logging is used throughout the application.
+
+Example
+
+```
+Fetching shows for movieId: ...
+Fetching seat layout for showId: ...
+Locking seats [...]
+Expired lock released for seat ...
+Seats locked successfully.
+```
+
+---
+
+## Service Communication
+
+The Theatre Service communicates with the Catalog Service using OpenFeign to validate movie existence before retrieving available shows.
+
+```
+Theatre Service
+        │
+        ▼
+Catalog Service
+        │
+        ▼
+Movie Exists?
+      │
+   Yes │ No
+      ▼
+Return Shows
+        │
+        └────► 404 Not Found
+```
+
+---
+
+## Testing
+
+Implemented and verified:
+
+- Get Shows by Movie
+- Get Seat Layout
+- Lock Available Seats
+- Already Booked Seat
+- Already Locked Seat
+- Invalid Show
+- Invalid Seat
+- Movie Validation
+- TTL Expiry
+- Automatic Seat Unlock
+- Optimistic Locking
+
+---
+
+## Future Improvements
+
+- JWT Authentication
+- Redis-based Distributed Locking
+- Booking Service Integration
+- Payment Service Integration
+- Notification Service Integration
+- Kafka Event Publishing
+- Resilience4j Circuit Breaker
+- Docker Support
+- Flyway Database Migration
+
+---
+
+## Developed As Part Of
+
+BookMyShow Clone - Microservices Architecture

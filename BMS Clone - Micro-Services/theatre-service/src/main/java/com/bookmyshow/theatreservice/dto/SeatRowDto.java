@@ -1,14 +1,13 @@
 package com.bookmyshow.theatreservice.dto;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 @Data
 @Builder
 public class SeatRowDto {
 
-    private String row;
-    private List<SeatDto> seats;
+  private String row;
+  private List<SeatDto> seats;
 }

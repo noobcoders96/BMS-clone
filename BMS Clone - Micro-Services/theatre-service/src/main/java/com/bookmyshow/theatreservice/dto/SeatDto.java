@@ -9,7 +9,7 @@ import lombok.Data;
 @Builder
 public class SeatDto {
 
-    private String seatId;
-    private SeatStatus status;
-    private SeatTier tier;
+  private String seatId;
+  private SeatStatus status;
+  private SeatTier tier;
 }

@@ -9,7 +9,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class LockSeatResponse {
 
-    private boolean locked;
+  private boolean locked;
 
-    private Integer lockExpiresInSeconds;
+  private Integer lockExpiresInSeconds;
 }
